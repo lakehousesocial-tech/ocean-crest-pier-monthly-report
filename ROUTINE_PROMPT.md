@@ -12,14 +12,15 @@ Suggested Routine settings:
   you created by duplicating this template), branch `main`
 - **Allowed tools:** `Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch`
 - **Environment secrets:** `BUFFER_API_KEY`, `META_ACCESS_TOKEN`,
-  `FB_PAGE_ID`, `IG_BUSINESS_ID`, `CLIENT_NAME` (see README.md)
+  `FB_PAGE_ID`, `CLIENT_NAME` (required), `IG_BUSINESS_ID` (optional --
+  see README.md)
 
 ---
 
 ```
 You are running the fully automated monthly {{CLIENT_NAME}} social media report pipeline. This runs unattended on a schedule -- do not ask for confirmation or approval at any step.
 
-1. Run: bash run_monthly_report.sh from the repo root. This single script pulls fresh Buffer metrics, pulls a fresh follower snapshot from the Meta Graph API, generates the branded .pptx (which also auto-generates this month's goals and checks off last month's against real data, updating client-context.md), and sanity-checks the result. It expects BUFFER_API_KEY, META_ACCESS_TOKEN, FB_PAGE_ID, IG_BUSINESS_ID, and CLIENT_NAME as environment variables -- these are configured as secrets on this Routine's Environment; do not try to source them elsewhere.
+1. Run: bash run_monthly_report.sh from the repo root. This single script pulls fresh Buffer metrics, pulls a fresh follower snapshot from the Meta Graph API, generates the branded .pptx (which also auto-generates this month's goals and checks off last month's against real data, updating client-context.md), and sanity-checks the result. It expects BUFFER_API_KEY, META_ACCESS_TOKEN, FB_PAGE_ID, and CLIENT_NAME as environment variables (plus IG_BUSINESS_ID if it's been set, for an extra sanity check) -- these are configured as secrets on this Routine's Environment; do not try to source them elsewhere.
 
 2. Read the script's final output line:
 - If it is exactly OK_TO_UPLOAD:<filename>, commit that exact file (in the repo root) to the repository instead of uploading it anywhere: run `git add -f "<filename>"`, then `git commit -m "Add generated report: <filename>"`, then `git push origin HEAD:main`. Do this as a plain git/Bash file operation -- do not read the file's contents into your own context or try to transcribe/encode it yourself; `git add` operates on the file directly.
