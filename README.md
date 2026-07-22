@@ -53,8 +53,13 @@ once a month (via a scheduled Routine):
 4. **Collect this client's credentials:**
    - A Buffer API access token with access to their connected
      Instagram/TikTok/Facebook channels (`BUFFER_API_KEY`)
-   - A Meta Graph API access token with `pages_read_engagement` /
-     `instagram_basic` permission on their Page (`META_ACCESS_TOKEN`)
+   - A **long-lived** Meta Graph API access token with
+     `pages_read_engagement` / `instagram_basic` permission on their Page
+     (`META_ACCESS_TOKEN`) — **do not use a token copied straight from the
+     Graph API Explorer; those expire in about an hour and will break the
+     Routine before its first scheduled run.** See
+     `docs/meta-long-lived-token.md` for the exact steps to generate one
+     that doesn't expire.
    - Their Facebook Page ID (`FB_PAGE_ID`)
    - Their Instagram Business Account ID (`IG_BUSINESS_ID`)
 
@@ -87,6 +92,7 @@ once a month (via a scheduled Routine):
 | `run-log.txt` | Append-only failure log (starts empty/absent for a new client) |
 | `ROUTINE_PROMPT.md` | The exact Routine prompt to use, with placeholders |
 | `docs/example-design-spec.md` | Worked example of translating a reference deck into the design-system code block |
+| `docs/meta-long-lived-token.md` | How to generate a `META_ACCESS_TOKEN` that doesn't expire before next month's run |
 
 ## Things worth knowing before you run this unattended
 
@@ -104,6 +110,11 @@ once a month (via a scheduled Routine):
 - **TikTok has no follower-count data source** — neither Buffer nor Meta's
   Graph API expose it. That hero card is always a manual placeholder
   (`[Count]`) meant to be overtyped by hand before presenting.
+- **`META_ACCESS_TOKEN` must be long-lived.** A token pasted straight from
+  the Graph API Explorer expires in about an hour; the Routine only runs
+  once a month, so it will die almost immediately. See
+  `docs/meta-long-lived-token.md` — this is step 4 of onboarding above, not
+  optional.
 - **The first month for any client has no prior Goal Log entry.** The
   "Last Month" slide falls back to manual placeholder bullets, and the
   content-tie-in goal is skipped entirely if `client-context.md`'s Active

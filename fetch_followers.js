@@ -8,9 +8,13 @@
  * Requires Node 18+ (built-in fetch). No external dependencies.
  *
  * Env vars (all required):
- *   META_ACCESS_TOKEN  Graph API access token (Page-scoped or a token with
- *                       pages_read_engagement / instagram_basic permission)
- *                       for THIS client's Page.
+ *   META_ACCESS_TOKEN  A LONG-LIVED Page Access Token (pages_read_engagement /
+ *                       instagram_basic permission) for THIS client's Page --
+ *                       NOT a token copied straight from the Graph API
+ *                       Explorer, which expires in ~1 hour and will break
+ *                       this script well before its next monthly run. See
+ *                       docs/meta-long-lived-token.md for how to generate
+ *                       one that doesn't expire.
  *   FB_PAGE_ID          The Facebook Page ID that owns the connected
  *                       Instagram Business Account.
  *   IG_BUSINESS_ID      The Instagram Business Account ID -- not queried
