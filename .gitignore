@@ -1,0 +1,6 @@
+.env
+.zshrc
+*.log
+node_modules/
+.claude/
+__pycache__/
