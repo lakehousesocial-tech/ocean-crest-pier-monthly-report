@@ -71,7 +71,14 @@ once a month (via a scheduled Routine):
    `CLIENT_NAME` (the display name shown on the report cover — should match
    what you put in `client-context.md`), and `IG_BUSINESS_ID` if you have
    it. Point the Environment's repo source at the new repo you created in
-   step 1.
+   step 1. Set the Environment's **Setup Script** to:
+   ```
+   pip install -r requirements.txt
+   ```
+   (installs `python-pptx`, the one non-stdlib dependency `generate_report.py`
+   and `validate_report.py` need; Node needs no setup since
+   `buffer-metrics.js`/`fetch_followers.js` only use Node 18+'s built-in
+   `fetch`).
 
 6. **Create a Routine** bound to that Environment, monthly cron
    `0 0 1 * *`, using the prompt in `ROUTINE_PROMPT.md` (fill in
