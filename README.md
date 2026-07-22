@@ -73,12 +73,20 @@ once a month (via a scheduled Routine):
    it. Point the Environment's repo source at the new repo you created in
    step 1. Set the Environment's **Setup Script** to:
    ```
-   pip install -r requirements.txt
+   pip install python-pptx
    ```
-   (installs `python-pptx`, the one non-stdlib dependency `generate_report.py`
-   and `validate_report.py` need; Node needs no setup since
+   (installs the one non-stdlib dependency `generate_report.py` and
+   `validate_report.py` need; Node needs no setup since
    `buffer-metrics.js`/`fetch_followers.js` only use Node 18+'s built-in
    `fetch`).
+
+   **Do NOT use `pip install -r requirements.txt` here.** The Setup Script
+   runs *before* the repo is cloned into the container, so a path like
+   `requirements.txt` doesn't exist yet at that point and the script fails
+   with `Could not open requirements file`. `requirements.txt` is still in
+   this repo as a reference for local/manual runs (`pip install -r
+   requirements.txt` works fine on your own machine, after the repo
+   exists) -- just not usable verbatim as the cloud Setup Script.
 
 6. **Create a Routine** bound to that Environment, monthly cron
    `0 0 1 * *`, using the prompt in `ROUTINE_PROMPT.md` (fill in
