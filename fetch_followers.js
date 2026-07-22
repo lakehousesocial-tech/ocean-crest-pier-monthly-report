@@ -7,7 +7,7 @@
  *
  * Requires Node 18+ (built-in fetch). No external dependencies.
  *
- * Env vars (all required):
+ * Env vars (required):
  *   META_ACCESS_TOKEN  A LONG-LIVED Page Access Token (pages_read_engagement /
  *                       instagram_basic permission) for THIS client's Page --
  *                       NOT a token copied straight from the Graph API
@@ -17,15 +17,19 @@
  *                       one that doesn't expire.
  *   FB_PAGE_ID          The Facebook Page ID that owns the connected
  *                       Instagram Business Account.
- *   IG_BUSINESS_ID      The Instagram Business Account ID -- not queried
- *                       directly (follower count is fetched via the Page's
- *                       instagram_business_account edge, per Meta's
- *                       documented field expansion), but used here to
- *                       sanity-check that the returned IG account actually
- *                       matches the one you expect, in case the Page's
- *                       linked IG account ever changes.
  *
  * Optional:
+ *   IG_BUSINESS_ID      The Instagram Business Account ID -- NOT required for
+ *                       the follower fetch to work (follower counts come via
+ *                       the Page's instagram_business_account edge, per
+ *                       Meta's documented field expansion, regardless of
+ *                       this var). If set, it's used only as a sanity-check
+ *                       that the returned IG account is the one you expect,
+ *                       in case the Page's linked IG account ever changes.
+ *                       Safe to leave unset while onboarding a client if you
+ *                       don't yet have access to confirm it -- add it later
+ *                       for the extra safety check, no behavior otherwise
+ *                       depends on it.
  *   GRAPH_API_VERSION  Defaults to v21.0
  *   FOLLOWER_LOG_PATH  Defaults to follower-history.json next to this script
  *
@@ -49,7 +53,6 @@ const IG_BUSINESS_ID = process.env.IG_BUSINESS_ID;
 for (const [name, value] of Object.entries({
   META_ACCESS_TOKEN: ACCESS_TOKEN,
   FB_PAGE_ID: FB_PAGE_ID,
-  IG_BUSINESS_ID: IG_BUSINESS_ID,
 })) {
   if (!value) {
     console.error(`Missing required env var: ${name}`);
@@ -73,7 +76,8 @@ async function fetchFollowerCounts() {
     throw new Error(`Graph API request failed: ${message}`);
   }
 
-  if (json.instagram_business_account && json.instagram_business_account.id !== IG_BUSINESS_ID) {
+  if (IG_BUSINESS_ID && json.instagram_business_account &&
+      json.instagram_business_account.id !== IG_BUSINESS_ID) {
     console.error(
       `Warning: Page's linked Instagram account (${json.instagram_business_account.id}) ` +
       `does not match IG_BUSINESS_ID (${IG_BUSINESS_ID}). Using the Page's actual linked account.`

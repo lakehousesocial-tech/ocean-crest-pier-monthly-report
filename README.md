@@ -61,13 +61,17 @@ once a month (via a scheduled Routine):
      `docs/meta-long-lived-token.md` for the exact steps to generate one
      that doesn't expire.
    - Their Facebook Page ID (`FB_PAGE_ID`)
-   - Their Instagram Business Account ID (`IG_BUSINESS_ID`)
+   - *(optional)* Their Instagram Business Account ID (`IG_BUSINESS_ID`) --
+     only used as a sanity-check in `fetch_followers.js`; the follower
+     fetch itself works without it, so it's fine to add later if you don't
+     have Instagram access yet during onboarding.
 
 5. **Create a new Environment** (Claude Code Remote) for this client and
-   set five secrets on it: `BUFFER_API_KEY`, `META_ACCESS_TOKEN`,
-   `FB_PAGE_ID`, `IG_BUSINESS_ID`, and `CLIENT_NAME` (the display name shown
-   on the report cover — should match what you put in `client-context.md`).
-   Point the Environment's repo source at the new repo you created in step 1.
+   set secrets on it: `BUFFER_API_KEY`, `META_ACCESS_TOKEN`, `FB_PAGE_ID`,
+   `CLIENT_NAME` (the display name shown on the report cover — should match
+   what you put in `client-context.md`), and `IG_BUSINESS_ID` if you have
+   it. Point the Environment's repo source at the new repo you created in
+   step 1.
 
 6. **Create a Routine** bound to that Environment, monthly cron
    `0 0 1 * *`, using the prompt in `ROUTINE_PROMPT.md` (fill in

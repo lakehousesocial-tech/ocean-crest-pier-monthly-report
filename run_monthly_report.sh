@@ -5,14 +5,17 @@
 # to run-log.txt and commits/pushes it so it's visible in the repo, then
 # exits nonzero so the caller knows not to upload.
 #
-# Requires exactly these five environment variables (configured in the
-# Routine's Environment secrets, not in this script or the repo):
+# Requires these environment variables (configured in the Routine's
+# Environment secrets, not in this script or the repo):
 #   BUFFER_API_KEY
 #   META_ACCESS_TOKEN
 #   FB_PAGE_ID
-#   IG_BUSINESS_ID
 #   CLIENT_NAME       -- display name shown on the cover slide and used in
 #                        the output filename, e.g. "Acme Gallery"
+# Optional:
+#   IG_BUSINESS_ID    -- sanity-checks the Page's linked Instagram account in
+#                        fetch_followers.js; safe to leave unset (see that
+#                        script's own docstring), add it later if desired.
 #
 # Reports on the month that just ended -- run this on/after the 1st of the
 # following month (the Routine should be scheduled for 00:00 UTC on the 1st).
