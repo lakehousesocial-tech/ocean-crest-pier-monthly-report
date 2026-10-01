@@ -17,11 +17,9 @@
  * Period design (carried over from the template's original build/diagnosis):
  *   - Current period is always the last 30 days.
  *   - Prior period width is PER CHANNEL, not uniform:
- *       - Instagram: 60 days (day 30-90 back), to give a fair post-count
- *         sample if a straight 30-day window is too thin (verify this
- *         against the new client's actual posting volume -- widen/narrow
- *         PRIOR_PERIOD_DAYS below if needed).
- *       - TikTok / Facebook: 30 days (day 30-60 back).
+ *       - All channels: 30 days (day 30-60 back). Keep this equal to the
+ *         current period -- totals are compared raw, so a wider prior
+ *         window (formerly 60 days for Instagram) skews percent changes.
  *   Both periods are derived identically (summed from per-post `metrics`),
  *   never from `aggregatedPostMetrics` -- see the retention note below for
  *   why.
@@ -55,7 +53,9 @@ if (!API_KEY) {
 const GRAPHQL_URL = process.env.BUFFER_GRAPHQL_URL || 'https://api.buffer.com/graphql';
 const TARGET_SERVICES = ['instagram', 'tiktok', 'facebook'];
 const CURRENT_PERIOD_DAYS = 30;
-const PRIOR_PERIOD_DAYS = { instagram: 60, tiktok: 30, facebook: 30 };
+// Must equal CURRENT_PERIOD_DAYS: the report compares raw totals, so unequal
+// window widths skew every percent change.
+const PRIOR_PERIOD_DAYS = { instagram: 30, tiktok: 30, facebook: 30 };
 const POSTS_PAGE_SIZE = 50;
 const POSTS_MAX_PAGES = 20; // safety cap against a runaway pagination loop
 

@@ -39,11 +39,10 @@ prior period here anyway (re-verify this cap against each new client's
 actual Buffer plan -- see buffer-metrics.js's own notes).
 
 Current period is always the last 30 days. Prior period width is PER
-CHANNEL: Instagram defaults to a 60-day-wide prior window (a straight
-30-day window can be too thin a post-count sample to compare against);
-TikTok and Facebook default to a 30-day-wide prior window. Re-tune
-PRIOR_PERIOD_DAYS in buffer-metrics.js per client if their actual posting
-volume calls for a different balance.
+CHANNEL, but defaults to 30 days everywhere. Totals are compared raw, so
+a prior window wider than the current 30 days skews every percent change
+-- only widen PRIOR_PERIOD_DAYS in buffer-metrics.js if the comparison is
+also normalized.
 
 Metric field naming is NOT uniform across platforms: Facebook reports
 "impressions", Instagram/TikTok report "views"; only Instagram posts ever
@@ -520,10 +519,10 @@ def classify_change(current, prior):
 
 def weighted_engagement_rate(totals):
     """interactions / reach, falling back to impressions only where reach
-    isn't tracked at all (Facebook). Returns (rate, interactions, denom_key, denom)."""
+    isn't tracked or is zero (Facebook). Returns (rate, interactions, denom_key, denom)."""
     interactions = sum(totals.get(k, 0) for k in ("reactions", "comments", "shares", "saves"))
     for denom_key in ("reach", "impressions"):
-        if denom_key in totals:
+        if totals.get(denom_key):
             denom = totals[denom_key]
             rate = (interactions / denom * 100) if denom else 0.0
             return rate, interactions, denom_key, denom
