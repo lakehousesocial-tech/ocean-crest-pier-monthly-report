@@ -445,12 +445,65 @@ def parse_iso(value):
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def is_story(post):
+    """Stories have no caption and live under a /stories/ permalink."""
+    return "/stories/" in (post.get("externalLink") or "")
+
+
+SHARED_ALBUM_KEYS = ("impressions", "views", "reach", "clicks")
+
+
+def merge_album_posts(posts):
+    """A multi-photo Facebook post comes back from Buffer as several posts
+    with the same sentAt and identical post-level metrics (impressions,
+    clicks) -- summing them would count the same impressions once per photo.
+    Merge each such group into one post: shared metrics counted once,
+    reactions/comments/shares summed, first non-empty caption kept."""
+    groups, order = {}, []
+    for post in posts:
+        m = post.get("metrics") or {}
+        key = None if is_story(post) else (
+            post.get("sentAt"), tuple(m.get(k) for k in SHARED_ALBUM_KEYS))
+        if key is None or key[0] is None:
+            order.append([post])
+            continue
+        if key not in groups:
+            groups[key] = []
+            order.append(groups[key])
+        groups[key].append(post)
+    merged = []
+    for group in order:
+        if len(group) == 1:
+            merged.append(group[0])
+            continue
+        base = dict(group[0])
+        metrics = dict(base.get("metrics") or {})
+        for k in ("reactions", "comments", "shares", "saves"):
+            if any(k in (g.get("metrics") or {}) for g in group):
+                metrics[k] = sum((g.get("metrics") or {}).get(k) or 0 for g in group)
+        base["metrics"] = metrics
+        base["text"] = next((g.get("text") for g in group if g.get("text")), "")
+        merged.append(base)
+    return merged
+
+
 def flatten_posts(period_profiles):
     """period_profiles: list of channel entries; extracts .posts from a given period dict."""
     posts = []
     for profile in period_profiles or []:
-        posts.extend(profile.get("posts") or [])
+        posts.extend(merge_album_posts(profile.get("posts") or []))
     return posts
+
+
+def caption_for(post):
+    """Real caption if any; otherwise a label for what the post is, never a raw id."""
+    text = (post.get("text") or "").strip()
+    if text:
+        return text
+    if is_story(post):
+        return "Story (no caption)"
+    kind = {"video": "Video", "image": "Photo"}.get(post.get("assetType"), "Media")
+    return f"{kind} post (no caption)"
 
 
 def primary_metric(metrics, keys=("views", "impressions")):
@@ -1116,13 +1169,16 @@ def build_top_posts_slide(prs, platform_label, current_posts, current_totals, ch
     metric_label = METRIC_LABELS[metric_key]
     period_total = current_totals.get(metric_key, 0)
 
-    top_posts = sorted(current_posts,
+    # Stories have no caption and aren't comparable to feed posts; they stay
+    # in the period totals but aren't ranked here.
+    ranked = [p for p in current_posts if not is_story(p)] or current_posts
+    top_posts = sorted(ranked,
                         key=lambda p: primary_metric(p.get("metrics") or {}, chart_metric_keys),
                         reverse=True)[:5]
 
     top_value = primary_metric(top_posts[0].get("metrics") or {}, chart_metric_keys)
     share_pct = (top_value / period_total * 100) if period_total else 0
-    caption = (top_posts[0].get("text") or top_posts[0].get("postId") or "-")
+    caption = caption_for(top_posts[0])
     caption_short = clean_caption(caption, 45)
 
     stat_box = slide.shapes.add_textbox(CONTENT_LEFT, CONTENT_TOP, CONTENT_WIDTH, Inches(0.6))
@@ -1151,7 +1207,7 @@ def build_top_posts_slide(prs, platform_label, current_posts, current_totals, ch
             date_str = parse_iso(sent).strftime("%b %d")
         except (TypeError, ValueError):
             date_str = "-"
-        cap = clean_caption(post.get("text") or post.get("postId") or "-", 180)
+        cap = clean_caption(caption_for(post), 180)
         metrics = post.get("metrics") or {}
         table_rows.append([
             cap, date_str,

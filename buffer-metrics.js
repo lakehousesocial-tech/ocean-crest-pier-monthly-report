@@ -114,7 +114,7 @@ async function fetchPosts(organizationId, channelId, startDateTime, endDateTime)
       `query Posts($input: PostsInput!, $first: Int, $after: String) {
         posts(input: $input, first: $first, after: $after) {
           pageInfo { hasNextPage endCursor }
-          edges { node { id text sentAt metrics { type name value unit } } }
+          edges { node { id text sentAt externalLink assets { type } metrics { type name value unit } } }
         }
       }`,
       {
@@ -140,6 +140,8 @@ async function fetchPosts(organizationId, channelId, startDateTime, endDateTime)
           postId: node.id,
           text: node.text,
           sentAt: node.sentAt,
+          externalLink: node.externalLink || null,
+          assetType: (node.assets && node.assets[0] && node.assets[0].type) || null,
           metrics: metricsListToDict(node.metrics),
         });
       }
