@@ -38,11 +38,10 @@ Free plan to roughly the last 30 days, which would make it unusable for any
 prior period here anyway (re-verify this cap against each new client's
 actual Buffer plan -- see buffer-metrics.js's own notes).
 
-Current period is always the last 30 days. Prior period width is PER
-CHANNEL, but defaults to 30 days everywhere. Totals are compared raw, so
-a prior window wider than the current 30 days skews every percent change
--- only widen PRIOR_PERIOD_DAYS in buffer-metrics.js if the comparison is
-also normalized.
+Current period is the calendar month that just ended (UTC); prior period
+is the calendar month before it, for every channel. Windows come from
+buffer-metrics.js's `range` fields. Totals are compared raw, so never
+make one side wider than the other.
 
 Metric field naming is NOT uniform across platforms: Facebook reports
 "impressions", Instagram/TikTok report "views"; only Instagram posts ever
@@ -1032,7 +1031,7 @@ def follower_hero_card(follower_log, metric_key):
             "number_color": COLORS["cobalt_deep"]}
 
 
-def build_insights_slide(prs, title, current_posts, prior_posts, prior_period_days, metric_keys,
+def build_insights_slide(prs, title, current_posts, prior_posts, windows, metric_keys,
                           chart_metric_keys, include_reach, extra_hero_card=None):
     """title -> hero stat cards -> comparison table -> optional decline
     callout -> dual-line chart (current vs. prior, by day-in-period).
@@ -1079,8 +1078,8 @@ def build_insights_slide(prs, title, current_posts, prior_posts, prior_period_da
     chart_top = Emu(int(next_top + SECTION_LABEL_OFFSET))
     chart_height = Emu(int(CONTENT_BOTTOM - chart_top))
 
-    current_period_start = datetime.now(timezone.utc).date() - timedelta(days=30)
-    chart_prior_start = current_period_start - timedelta(days=prior_period_days)
+    current_period_start, current_period_days = windows["current_start"], windows["current_days"]
+    chart_prior_start, prior_period_days = windows["prior_start"], windows["prior_days"]
 
     # A prior window wider than 30 days (e.g. Instagram's default 60-day
     # window -- see buffer-metrics.js) is compressed onto the same 30-point
@@ -1091,7 +1090,8 @@ def build_insights_slide(prs, title, current_posts, prior_posts, prior_period_da
     # PowerPoint and Google Slides, unlike an OOXML tickLblSkip property
     # which Google Slides' PPTX import doesn't reliably honor.
     categories = [f"Day {i + 1}" if (i + 1) == 1 or (i + 1) % 5 == 0 else "" for i in range(30)]
-    current_values = daily_totals_by_day_index(current_posts, current_period_start, 30, chart_metric_keys)
+    current_values = daily_totals_by_day_index(current_posts, current_period_start, 30, chart_metric_keys,
+                                                period_days=current_period_days)
     prior_values = daily_totals_by_day_index(prior_posts, chart_prior_start, 30, chart_metric_keys,
                                               period_days=prior_period_days)
     add_dual_line_chart(slide, f"Daily {METRIC_LABELS[headline_key]} — Current vs. Prior Period",
@@ -1167,15 +1167,18 @@ def build_top_posts_slide(prs, platform_label, current_posts, current_totals, ch
     return slide
 
 
-def prior_period_days_for(profiles):
-    """Reads the actual prior-window width buffer-metrics.js used rather
-    than assuming -- falls back to 30 if a channel entry is missing this
-    for any reason."""
+def period_windows_for(profiles):
+    """Reads the actual current/prior windows buffer-metrics.js used (month
+    boundaries) rather than assuming them."""
     for profile in profiles or []:
-        days = (profile.get("prior") or {}).get("range", {}).get("days")
-        if days:
-            return days
-    return 30
+        cur, pri = profile.get("current", {}).get("range"), profile.get("prior", {}).get("range")
+        if cur and pri:
+            return {"current_start": parse_iso(cur["startDate"]).date(), "current_days": cur["days"],
+                    "prior_start": parse_iso(pri["startDate"]).date(), "prior_days": pri["days"]}
+    today = datetime.now(timezone.utc).date()
+    start = today - timedelta(days=30)
+    return {"current_start": start, "current_days": 30,
+            "prior_start": start - timedelta(days=30), "prior_days": 30}
 
 
 def build_instagram_slide(prs, data, follower_log):
@@ -1184,7 +1187,7 @@ def build_instagram_slide(prs, data, follower_log):
     prior_posts = flatten_posts([p.get("prior", {}) for p in profiles])
     follower_card = follower_hero_card(follower_log, "instagramFollowers")
     return build_insights_slide(prs, "Instagram Insights", current_posts, prior_posts,
-                                 prior_period_days_for(profiles),
+                                 period_windows_for(profiles),
                                  INSTAGRAM_METRICS, ("views", "impressions"), include_reach=True,
                                  extra_hero_card=follower_card)
 
@@ -1203,7 +1206,7 @@ def build_facebook_slide(prs, data, follower_log):
     prior_posts = flatten_posts([p.get("prior", {}) for p in profiles])
     follower_card = follower_hero_card(follower_log, "facebookFollowers")
     return build_insights_slide(prs, "Facebook Insights", current_posts, prior_posts,
-                                 prior_period_days_for(profiles),
+                                 period_windows_for(profiles),
                                  FACEBOOK_METRICS, ("impressions", "views"), include_reach=False,
                                  extra_hero_card=follower_card)
 
@@ -1230,7 +1233,7 @@ def build_tiktok_slide(prs, data):
         "number_color": COLORS["cobalt_deep"],
     }
     return build_insights_slide(prs, "TikTok Insights", current_posts, prior_posts,
-                                 prior_period_days_for(profiles),
+                                 period_windows_for(profiles),
                                  TIKTOK_METRICS, ("views", "impressions"), include_reach=True,
                                  extra_hero_card=manual_follower_card)
 

@@ -15,11 +15,12 @@
  *                          account's first organization is used.
  *
  * Period design (carried over from the template's original build/diagnosis):
- *   - Current period is always the last 30 days.
- *   - Prior period width is PER CHANNEL, not uniform:
- *       - All channels: 30 days (day 30-60 back). Keep this equal to the
- *         current period -- totals are compared raw, so a wider prior
- *         window (formerly 60 days for Instagram) skews percent changes.
+ *   - Current period is the calendar month that just ended (UTC midnight
+ *     on the 1st to the next 1st); prior period is the calendar month
+ *     before it, for every channel. Windows are anchored to month
+ *     boundaries, not "now", so the time of day a run fires doesn't change
+ *     the numbers. Totals are compared raw, so both periods must be
+ *     comparable in width (28-31 days) -- never widen one side.
  *   Both periods are derived identically (summed from per-post `metrics`),
  *   never from `aggregatedPostMetrics` -- see the retention note below for
  *   why.
@@ -52,10 +53,6 @@ if (!API_KEY) {
 
 const GRAPHQL_URL = process.env.BUFFER_GRAPHQL_URL || 'https://api.buffer.com/graphql';
 const TARGET_SERVICES = ['instagram', 'tiktok', 'facebook'];
-const CURRENT_PERIOD_DAYS = 30;
-// Must equal CURRENT_PERIOD_DAYS: the report compares raw totals, so unequal
-// window widths skew every percent change.
-const PRIOR_PERIOD_DAYS = { instagram: 30, tiktok: 30, facebook: 30 };
 const POSTS_PAGE_SIZE = 50;
 const POSTS_MAX_PAGES = 20; // safety cap against a runaway pagination loop
 
@@ -155,8 +152,16 @@ async function fetchPosts(organizationId, channelId, startDateTime, endDateTime)
 }
 
 async function main() {
+  // Exact calendar months in UTC: "current" is the month that just ended,
+  // "prior" is the month before it. Boundaries are midnight UTC on the 1st,
+  // so a run at any time of day on/after the 1st yields identical windows.
   const now = new Date();
-  const currentStart = new Date(now.getTime() - CURRENT_PERIOD_DAYS * 24 * 60 * 60 * 1000);
+  const currentEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const currentStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const priorStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const currentDays = Math.round((currentEnd - currentStart) / DAY_MS);
+  const priorDays = Math.round((currentStart - priorStart) / DAY_MS);
   const organizationId = await fetchOrganizationId();
   const channels = await fetchConnectedChannels(organizationId);
 
@@ -165,8 +170,6 @@ async function main() {
 
   await Promise.all(
     channels.map(async (channel) => {
-      const priorDays = PRIOR_PERIOD_DAYS[channel.service] ?? CURRENT_PERIOD_DAYS;
-      const priorStart = new Date(currentStart.getTime() - priorDays * 24 * 60 * 60 * 1000);
       const entry = { channelId: channel.id, name: channel.displayName || channel.name };
 
       try {
@@ -174,11 +177,13 @@ async function main() {
         // -- avoids double-fetching the boundary and keeps both periods on
         // an identical code path.
         const allPosts = await fetchPosts(
-          organizationId, channel.id, isoDateTime(priorStart), isoDateTime(now)
+          organizationId, channel.id, isoDateTime(priorStart), isoDateTime(currentEnd)
         );
         entry.current = {
-          range: { startDate: isoDateTime(currentStart), endDate: isoDateTime(now), days: CURRENT_PERIOD_DAYS },
-          posts: allPosts.filter((p) => p.sentAt >= isoDateTime(currentStart)),
+          range: { startDate: isoDateTime(currentStart), endDate: isoDateTime(currentEnd), days: currentDays },
+          posts: allPosts.filter(
+            (p) => p.sentAt >= isoDateTime(currentStart) && p.sentAt < isoDateTime(currentEnd)
+          ),
         };
         entry.prior = {
           range: { startDate: isoDateTime(priorStart), endDate: isoDateTime(currentStart), days: priorDays },
