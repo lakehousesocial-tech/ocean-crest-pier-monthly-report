@@ -60,3 +60,13 @@
 - [ ] Restore TikTok posting cadence — down 33% this period (4 vs. 6 posts). Aim for 6+ posts next period. <!-- check: tiktok.postCount > 6 -->
 - [ ] Restore Facebook posting cadence — down 31% this period (22 vs. 32 posts). Aim for 32+ posts next period. <!-- check: facebook.postCount > 32 -->
 - [ ] Close the engagement gap on Facebook — trailing TikTok by 6.0 points (1.37% vs. 7.40%). Borrow whatever content approach is working on TikTok. <!-- check: facebook.engagementRate > 1.37 -->
+
+### September
+
+**What changed:** Instagram: 17 vs. 27 posts, engagement up (4.49% → 6.93%). TikTok: 4 vs. 6 posts, engagement up (5.57% → 6.57%). Facebook: 22 vs. 32 posts, engagement down (1.28% → 1.28%).
+
+**Goals set:**
+- [ ] Restore Instagram posting cadence — down 37% this period (17 vs. 27 posts). Aim for 27+ posts next period. <!-- check: instagram.postCount > 27 -->
+- [ ] Restore TikTok posting cadence — down 33% this period (4 vs. 6 posts). Aim for 6+ posts next period. <!-- check: tiktok.postCount > 6 -->
+- [ ] Restore Facebook posting cadence — down 31% this period (22 vs. 32 posts). Aim for 32+ posts next period. <!-- check: facebook.postCount > 32 -->
+- [ ] Close the engagement gap on Facebook — trailing Instagram by 5.7 points (1.28% vs. 6.93%). Borrow whatever content approach is working on Instagram. <!-- check: facebook.engagementRate > 1.28 -->
