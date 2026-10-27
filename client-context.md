@@ -70,3 +70,13 @@
 - [ ] Restore TikTok posting cadence — down 33% this period (4 vs. 6 posts). Aim for 6+ posts next period. <!-- check: tiktok.postCount > 6 -->
 - [ ] Restore Facebook posting cadence — down 31% this period (22 vs. 32 posts). Aim for 32+ posts next period. <!-- check: facebook.postCount > 32 -->
 - [ ] Close the engagement gap on Facebook — trailing Instagram by 5.7 points (1.28% vs. 6.93%). Borrow whatever content approach is working on Instagram. <!-- check: facebook.engagementRate > 1.28 -->
+
+### October
+
+**What changed:** Instagram: 24 vs. 17 posts, engagement down (6.93% → 4.08%). TikTok: 4 vs. 4 posts, engagement down (6.57% → 4.92%). Facebook: 26 vs. 22 posts, engagement down (1.28% → 1.04%).
+
+**Goals set:**
+- [ ] Improve Instagram engagement quality — rate fell from 6.93% to 4.08% this period. <!-- check: instagram.engagementRate > 6.93 -->
+- [ ] Diversify TikTok content — one post drove 44% of this period's total; publish more posts capable of carrying reach on their own rather than relying on a single standout. <!-- check: tiktok.topPostShare < 44.2 -->
+- [ ] Improve Facebook engagement quality — rate fell from 1.28% to 1.04% this period. <!-- check: facebook.engagementRate > 1.28 -->
+- [ ] Close the engagement gap on Facebook — trailing TikTok by 3.9 points (1.04% vs. 4.92%). Borrow whatever content approach is working on TikTok. <!-- check: facebook.engagementRate > 1.04 -->
