@@ -36,8 +36,14 @@ if [ -z "${CLIENT_NAME:-}" ]; then
   exit 1
 fi
 
-MONTH=$(date -u -d "last month" +%B 2>/dev/null || date -u -v-1m +%B)
-YEAR=$(date -u -d "last month" +%Y 2>/dev/null || date -u -v-1m +%Y)
+if [ -n "${REPORT_MONTH:-}" ]; then
+  # REPORT_MONTH=YYYY-MM overrides the default of "last month" (see buffer-metrics.js)
+  MONTH=$(date -u -d "${REPORT_MONTH}-01" +%B)
+  YEAR=$(date -u -d "${REPORT_MONTH}-01" +%Y)
+else
+  MONTH=$(date -u -d "last month" +%B 2>/dev/null || date -u -v-1m +%B)
+  YEAR=$(date -u -d "last month" +%Y 2>/dev/null || date -u -v-1m +%Y)
+fi
 OUTPUT="${CLIENT_NAME} Monthly Report — ${MONTH} ${YEAR}.pptx"
 TIMESTAMP="$(date -u +%FT%TZ)"
 

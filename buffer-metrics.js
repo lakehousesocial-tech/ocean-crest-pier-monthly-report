@@ -157,7 +157,12 @@ async function main() {
   // Exact calendar months in UTC: "current" is the month that just ended,
   // "prior" is the month before it. Boundaries are midnight UTC on the 1st,
   // so a run at any time of day on/after the 1st yields identical windows.
-  const now = new Date();
+  // REPORT_MONTH=YYYY-MM runs the report for that month instead (e.g. a few
+  // days early); the anchor is the 1st of the month after it.
+  const override = /^(\d{4})-(\d{2})$/.exec(process.env.REPORT_MONTH || "");
+  const now = override
+    ? new Date(Date.UTC(Number(override[1]), Number(override[2]), 1))
+    : new Date();
   const currentEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const currentStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const priorStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
