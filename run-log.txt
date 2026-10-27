@@ -1,0 +1,4 @@
+[2026-10-27T18:21:59Z] REPORT GENERATION FAILED: Traceback (most recent call last):
+  File "/home/user/ocean-crest-pier-monthly-report/generate_report.py", line 100, in <module>
+    from pptx import Presentation
+ModuleNotFoundError: No module named 'pptx'
