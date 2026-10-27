@@ -61,6 +61,11 @@ if ! node fetch_followers.js > /tmp/followers_out.log 2>/tmp/followers_err.log; 
   exit 1
 fi
 
+if ! python3 -c "import pptx" >/dev/null 2>&1; then
+  echo "python-pptx not importable; installing for $(command -v python3)"
+  python3 -m pip install --quiet --ignore-installed pillow python-pptx >/tmp/pip_install.log 2>&1
+fi
+
 echo "=== Step 3: Generating deck + auto goals ==="
 if ! python3 generate_report.py --data /tmp/buffer_data.json --output "$OUTPUT" --month "$MONTH" \
      --client "$CLIENT_NAME" > /tmp/generate_out.log 2>&1; then
